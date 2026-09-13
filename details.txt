@@ -1,0 +1,61 @@
+6. Housing & Roommate Management Platform
+Category: Housing / Community
+
+Owner
+   │
+   ▼
+Create Property
+   │
+   ▼
+Add Rooms
+   │
+   ▼
+Set Availability
+   │
+   ▼
+Tenant Searches
+   │
+   ▼
+Roommate / Property Match
+   │
+   ▼
+Viewing Request
+   │
+   ▼
+Application
+   │
+   ▼
+Approval
+   │
+   ▼
+Tenant
+Possible users
+
+Property Owner
+Tenant
+Roommate
+Property Manager
+Admin
+Possible features
+
+Property listings
+Buildings, flats and rooms
+Roommate profiles
+Preference matching
+Availability management
+Property viewing requests
+Tenant verification
+Rent tracking
+Utility bill splitting
+Maintenance requests
+Rental documents
+Notifications
+Owner/manager dashboard
+Backend challenges
+
+Room availability
+Roommate matching
+Booking/application workflows
+Rent and bill calculations
+Transaction-safe occupancy updates
+Permission management
