@@ -9,6 +9,9 @@ export interface IRegisterTenantPayload {
     name: string
     email: string
     password: string
+    tenant : {
+        contactNumber ? : string
+    }
 }
 
 export interface IRequestUser {

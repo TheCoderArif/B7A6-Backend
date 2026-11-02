@@ -12,7 +12,7 @@ import {
 
 
 const registerTenant = async (payload: IRegisterTenantPayload) => {
-    const { name, password } = payload
+    const { name, password, tenant : tenantData } = payload
     const email = payload.email.trim().toLowerCase()
 
     const isUserExists = await prisma.user.findUnique({
@@ -34,7 +34,7 @@ const registerTenant = async (payload: IRegisterTenantPayload) => {
             status: UserStatus.ACTIVE,
             emailVerified: false,
             tenant: {
-                create: { name, email },
+                create: { name, email, contactNumber : tenantData.contactNumber || "" },
             },
         },
         omit: { password: true },
