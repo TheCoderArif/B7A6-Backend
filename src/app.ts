@@ -7,6 +7,7 @@ import { globalErrorHandler } from './app/middleware/globalErrorHandler'
 import { notFound } from './app/middleware/notFound'
 import { AuthRoutes } from './app/module/auth/auth.route'
 import z from 'zod'
+import { redisClient } from './app/lib/redis'
 
 const app: Application = express()
 
@@ -39,27 +40,21 @@ app.get('/', async (req: Request, res: Response) => {
 
 
 // For testing
-app.post('/test', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/test', async (req: Request, res: Response, next: NextFunction) => {
 
     try {
-         const UserZodSchema = z.object({
-        name : z.string().optional(),
-        email: z.email(),
-        age: z.number().optional(),
-        inVerified: z.boolean().optional()
-    });
-
-    const payload = req.body;
-    const result = UserZodSchema.safeParse(payload);
-
-    if(!result.success) {
-        console.log(result.error);
-    }
+        
+        await redisClient.set("forgot-password-otp:user1@gmail.com", "123456", {
+            expiration: {
+                type : "EX",
+                value : 5 * 60
+            }
+        })
 
     res.status(httpStatus.OK).json({
         success: true,
         message: 'This is testing route...',
-        data: result
+        data: null,
     })
     } catch (error) {
         next(error);
