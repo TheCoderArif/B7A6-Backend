@@ -5,10 +5,15 @@ import config from '../../config'
 import { prisma } from '../../lib/prisma'
 import { jwtUtils } from '../../utils/jwt'
 import {
+    IForgotPasswordPayload,
     ILoginUserPayload,
     IRegisterTenantPayload,
-    IRequestUser
+    IRequestUser,
+    IResetPasswordPayload
 } from './auth.interface'
+import { ne } from 'zod/locales'
+import crypto from "crypto"
+import { redisClient } from '../../lib/redis'
 
 
 const registerTenant = async (payload: IRegisterTenantPayload) => {
@@ -182,11 +187,50 @@ const refreshToken = async (token: string) => {
     }
 }
 
+const forgotPassword = async (payload : IForgotPasswordPayload) => {
+    const {email} = payload;
+    
+    const isUserExists = await prisma.user.findUnique({
+        where : {
+            email
+        }
+    });
+
+    if(!isUserExists){
+        throw new Error("User Does not Exist!")
+    }
+    if (isUserExists.status === "BLOCKED"){
+        throw new Error("User Blocked")
+    }
+    if (isUserExists.isDeleted || isUserExists.status === "DELETED"){
+        throw new Error ("User Deleted")
+    }
+    
+    const otp = crypto.randomInt(100000, 1000000).toString();
+
+    const key = `forgot-password-otp:${isUserExists.email}`
+    await redisClient.set(key, otp, {
+        expiration: {
+            type: "EX",
+            value: 5 * 60
+        }
+    });
+
+
+
+
+};
+
+const resetPassword = (payload : IResetPasswordPayload) => {};
+
 
 
 export const AuthService = {
     registerTenant,
     loginUser,
     getMe,
-    refreshToken
+    refreshToken,
+    forgotPassword,
+    resetPassword
+    
 }

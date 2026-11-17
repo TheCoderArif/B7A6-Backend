@@ -13,4 +13,11 @@ router.get(
     AuthController.getMe,
 )
 router.post('/refresh-token', AuthController.refreshToken)
-export const AuthRoutes = router
+
+router.post('/forgot-password', AuthController.forgotPassword)
+router.post('/reset-password', AuthController.resetPassword)
+
+
+
+
+export const AuthRoutes = router;

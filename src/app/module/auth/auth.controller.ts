@@ -134,10 +134,43 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const forgotPassword = catchAsync(async (req: Request, res: Response) => {
+    const payload = req.body;
+    
+    const result = await AuthService.forgotPassword(payload)
+
+   
+   
+
+    sendResponse(res, {
+        statusCode: httpStatus.CREATED,
+        success: true,
+        message: `OTP sent to Email: ${payload.email}`,
+        data: null
+    })
+})
+
+const resetPassword = catchAsync(async (req: Request, res: Response) => {
+    const payload = req.body;
+
+    const result = await AuthService.resetPassword(payload)
+
+    sendResponse(res, {
+        statusCode: httpStatus.CREATED,
+        success: true,
+        message: 'Tenant registered successfully',
+        data: {
+            
+        },
+    })
+})
+
 
 export const AuthController = {
     registerTenant,
     loginUser,
     getMe,
     refreshToken,
+    forgotPassword,
+    resetPassword
 }
