@@ -5,25 +5,12 @@ import { sendResponse } from '../../utils/sendResponse'
 import { IRequestUser } from './auth.interface'
 import { AuthService } from './auth.service'
 import z, { email } from 'zod'
+import { UserValidations } from './auth.validations'
 
-const TenantRegisterZodSchema = z.object({
-    name : z.string(),
-    email : z.email(),
-    password : z .string()
-                .min(8, { message: 'Password must be at least 8 characters long' })
-                .max(32, { message: 'Password cannot exceed 32 characters' })
-                .regex(/[A-Z]/, { message: 'Must contain at least one uppercase letter' })
-                .regex(/[a-z]/, { message: 'Must contain at least one lowercase letter' })
-                .regex(/[0-9]/, { message: 'Must contain at least one number' })
-                .regex(/[^A-Za-z0-9]/, { message: 'Must contain at least one special character' }),
-    tenant : z.object({
-        contactNumber : z.string().optional()
-    }).optional()
-    
-});
+
 
 const registerTenant = catchAsync(async (req: Request, res: Response) => {
-    const payload = TenantRegisterZodSchema.safeParse(req.body);
+    const payload = UserValidations.TenantRegisterZodSchema.safeParse(req.body);
 
     if (!payload.success){
         throw new Error(payload.error.message)
@@ -136,6 +123,7 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
 
 const forgotPassword = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
+    // const payload = UserValidations.ForgotPasswordZodSchema.safeParse(req.body);
     
     const result = await AuthService.forgotPassword(payload)
 
@@ -158,10 +146,8 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
-        message: 'Tenant registered successfully',
-        data: {
-            
-        },
+        message: 'Password Changed successfully',
+        data: null,
     })
 })
 

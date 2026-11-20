@@ -28,7 +28,7 @@ const registerTenant = async (payload: IRegisterTenantPayload) => {
         throw new Error('User with this email already exists')
     }
 
-    const hashedPassword = await bcrypt.hash(password, 8)
+    const hashedPassword = await bcrypt.hash(password, Number(config.bcrypt_salt_rounds));
 
     const createdUser = await prisma.user.create({
         data: {
@@ -221,7 +221,53 @@ const forgotPassword = async (payload : IForgotPasswordPayload) => {
 
 };
 
-const resetPassword = (payload : IResetPasswordPayload) => {};
+const resetPassword = async (payload : IResetPasswordPayload) => {
+     const {otp, email, newPassword} = payload;
+    
+    const isUserExists = await prisma.user.findUnique({
+        where : {
+            email
+        }
+    });
+
+    if(!isUserExists){
+        throw new Error("User Does not Exist!")
+    }
+    if (isUserExists.status === "BLOCKED"){
+        throw new Error("User Blocked")
+    }
+    if (isUserExists.isDeleted || isUserExists.status === "DELETED"){
+        throw new Error ("User Deleted")
+    }
+
+    const key = `forgot-password-otp:${isUserExists.email}`
+
+    const redisOtp = await redisClient.get(key)
+    
+    if (!redisOtp) {
+        throw new Error ("Invalid OTP")
+    }
+
+    if (redisOtp !== otp) {
+        throw new Error ("OTP Does Not Match.")
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
+
+    const updatedUser = await prisma.user.update({
+        where : {
+            email : isUserExists.email
+        },
+        data : {
+            password : hashedNewPassword,
+        }
+    });
+
+    await redisClient.del([key]);
+
+
+
+};
 
 
 
