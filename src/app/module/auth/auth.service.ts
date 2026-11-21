@@ -14,6 +14,7 @@ import {
 import { ne } from 'zod/locales'
 import crypto from "crypto"
 import { redisClient } from '../../lib/redis'
+import { transporter } from '../../lib/nodeMailer'
 
 
 const registerTenant = async (payload: IRegisterTenantPayload) => {
@@ -216,6 +217,14 @@ const forgotPassword = async (payload : IForgotPasswordPayload) => {
         }
     });
 
+    await transporter.sendMail({
+        from: config.email_sender,
+        to: isUserExists.email,
+        subject: "Forgot Password",
+        // text: `Your OTP is ${otp}`,
+        html: `<h1>Your OTP is ${otp}</h1>`
+    });
+
 
 
 
@@ -264,6 +273,14 @@ const resetPassword = async (payload : IResetPasswordPayload) => {
     });
 
     await redisClient.del([key]);
+
+    await transporter.sendMail({
+        from: config.email_sender,
+        to: isUserExists.email,
+        subject: "Password Changed",
+        // text: `Your OTP is ${otp}`,
+        html: `<h1>Your Password has Changed Successfully!</h1>`
+    });
 
 
 
