@@ -15,6 +15,13 @@ import { ne } from 'zod/locales'
 import crypto from "crypto"
 import { redisClient } from '../../lib/redis'
 import { transporter } from '../../lib/nodeMailer'
+import { parseDataURI } from 'nodemailer/lib/shared'
+import ejs from "ejs"
+
+import path from "path";
+
+
+
 
 
 const registerTenant = async (payload: IRegisterTenantPayload) => {
@@ -31,7 +38,41 @@ const registerTenant = async (payload: IRegisterTenantPayload) => {
 
     const hashedPassword = await bcrypt.hash(password, Number(config.bcrypt_salt_rounds));
 
-    const createdUser = await prisma.user.create({
+
+    const expirationSeconds = 5 * 60;
+
+    const otpKey = `tenant-registration-otp:${email}`;
+    const otpValue = crypto.randomInt(100000, 1000000).toString();
+
+    await redisClient.set(otpKey, otpValue, {
+        expiration: {
+            type: "EX",
+            value: expirationSeconds
+        }
+    });
+
+
+    
+    const tenantRegistrationKey = `tenant-registration-data:${email}`
+    const redisUserDataPayload = {
+        name,
+        email,
+        password: hashedPassword,
+        tenant: tenantData
+    };
+
+    await redisClient.set(tenantRegistrationKey, JSON.stringify(redisUserDataPayload), {
+        expiration: {
+            type: "EX",
+            value: expirationSeconds
+        }
+    });
+
+
+
+/*
+
+     const createdUser = await prisma.user.create({
         data: {
             name,
             email,
@@ -73,7 +114,11 @@ const registerTenant = async (payload: IRegisterTenantPayload) => {
         accessToken,
         refreshToken
     }
-}
+
+*/
+
+
+};
 
 const loginUser = async (payload: ILoginUserPayload) => {
     const { password } = payload
@@ -207,14 +252,20 @@ const forgotPassword = async (payload : IForgotPasswordPayload) => {
         throw new Error ("User Deleted")
     }
     
-    const otp = crypto.randomInt(100000, 1000000).toString();
+    const otpValue = crypto.randomInt(100000, 1000000).toString();
 
     const key = `forgot-password-otp:${isUserExists.email}`
-    await redisClient.set(key, otp, {
+    await redisClient.set(key, otpValue, {
         expiration: {
             type: "EX",
             value: 5 * 60
         }
+    });
+
+    const templatePath = path.join(process.cwd(), "src/app/templates/forgot-password.ejs")
+
+    const htmlTemplate = await ejs.renderFile(templatePath, {
+        otp: otpValue
     });
 
     await transporter.sendMail({
@@ -222,7 +273,7 @@ const forgotPassword = async (payload : IForgotPasswordPayload) => {
         to: isUserExists.email,
         subject: "Forgot Password",
         // text: `Your OTP is ${otp}`,
-        html: `<h1>Your OTP is ${otp}</h1>`
+        html: htmlTemplate
     });
 
 
