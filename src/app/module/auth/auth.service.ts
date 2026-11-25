@@ -68,6 +68,24 @@ const registerTenant = async (payload: IRegisterTenantPayload) => {
         }
     });
 
+    const templatePath = path.join(process.cwd(), "src/app/templates/email-verification-otp.ejs");
+    const templateData = {
+        name: name,
+        email: email,
+        otp: otpValue,
+        expirationMinutes: expirationSeconds / 60
+    }
+
+    const htmlTemplate = await ejs.renderFile(templatePath, templateData);
+
+    await transporter.sendMail({
+        from: config.email_sender,
+        to: email,
+        subject: "Email Verification",
+        // text: `Your OTP is ${otp}`,
+        html: htmlTemplate
+    });
+
 
 
 /*
